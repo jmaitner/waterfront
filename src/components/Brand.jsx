@@ -7,13 +7,18 @@ export default function Brand({ compact = false }) {
   const [imgOk, setImgOk] = useState(true)
 
   if (imgOk) {
+    // The real Waterfront logo is white-on-transparent (made for dark
+    // backgrounds), so we sit it on a navy chip — works on the white app
+    // header and the white printed order sheet alike.
     return (
-      <img
-        src="/logo.png"
-        alt="Waterfront Solutions"
-        onError={() => setImgOk(false)}
-        className={compact ? 'h-9 w-auto' : 'h-12 w-auto'}
-      />
+      <div className={`inline-flex items-center rounded-lg bg-wf-navy ${compact ? 'px-3 py-1.5' : 'px-4 py-2'}`}>
+        <img
+          src="/logo.png"
+          alt="Waterfront Solutions"
+          onError={() => setImgOk(false)}
+          className={compact ? 'h-8 w-auto' : 'h-12 w-auto'}
+        />
+      </div>
     )
   }
 

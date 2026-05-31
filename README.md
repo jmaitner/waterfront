@@ -1,8 +1,15 @@
-# Waterfront Solutions — Deck Materials Takeoff (MVP)
+# Waterfront Solutions — Materials Takeoff (MVP)
 
-Internal tool that turns rectangular deck dimensions + a material choice into a
-correct parts list, an editable review, and a printable order sheet with the
-expected **leftover** (so ~$1,000 of decking stops going in the dumpster).
+Internal tool that turns a job into a correct parts list, an editable review,
+and a printable order sheet with the expected **leftover** (so ~$1,000 of
+decking stops going in the dumpster).
+
+A job is a **list of components** — a deck section, a stair run with landings, a
+railing run, a retaining/seawall, or freeform custom items. Each component knows
+its own formula; the app merges them all into one combined order sheet (so all
+the decking across the deck *and* the stairs lands in one place, which is where
+the leftover math earns its keep). The classic 12×16 rectangular deck is just
+the default component, so the simple case stays one click away.
 
 This is an MVP / demo — local-first, no backend, no auth.
 
@@ -18,9 +25,13 @@ That's the whole setup. Jobs and pricing persist to your browser's
 
 ## The 60-second demo
 
-1. **+ New job** → enter `12` length × `16` projection, TimberTech composite.
-2. **Review parts list** → believable framing / decking / fasteners / railing /
-   fascia quantities. Override any "Qty to Order" inline; it saves on the job.
+1. **+ New job** → starts with a `12 × 16` TimberTech deck component already
+   filled in. Optionally **+ Add component** → a bluff staircase (e.g. 18 ft
+   rise, 2 landings), a railing run, a seawall, or a custom kayak-ramp line.
+2. **Review parts list** → every component's items merge into shared categories
+   (Framing / Decking / Fasteners / Railing / Trim / Posts / Custom), each
+   tagged with its source. Override any "Qty to Order" inline; it saves on the
+   job.
 3. **Build order sheet** → grouped, rounded to purchase units, with expected
    leftover and an estimated material-cost total. **Print / Save PDF** or
    **Download CSV**.
@@ -64,8 +75,21 @@ npx wrangler pages deploy dist             # or set output dir = dist in the UI
 Drop the real logo at `public/logo.png` and it appears in the header and on the
 order sheet automatically. Until then a clean wave-mark wordmark stands in.
 
+## Adding a new component type
+
+The component model is the extension point. To add one (e.g. a pergola):
+
+1. Add its defaults + a `computeX(inputs, cfg)` that returns raw line items in
+   `src/materialRules.js`, and wire it into `computeComponent`.
+2. Add an entry to `COMPONENT_TYPES` and an editor in
+   `src/components/ComponentEditors.jsx`.
+
+Items flow into the shared order sheet automatically.
+
 ## Out of scope (intentionally)
 
-Accounts / multi-user, supplier SKU/API sync, L-shaped or multi-level decks,
-seawalls / docks / driveways, time/ad tracking, photo or CAD import. Extension
-points are left clean, but the MVP stays focused on the rectangular-deck flow.
+Accounts / multi-user, supplier SKU/API sync, true multi-level / L-shaped deck
+*geometry* (each section is still entered as a rectangle), engineered structural
+sizing, time/ad tracking, photo or CAD import. The stairs and retaining-wall
+formulas are believable approximations driven by seeded placeholders — confirm
+with Will before quoting off them.

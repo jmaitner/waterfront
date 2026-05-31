@@ -1,11 +1,10 @@
 import Brand from './Brand.jsx'
 import { money, qty } from '../format.js'
-import { MATERIAL_LABELS } from '../materialRules.js'
 
 // The deliverable: a clean, grouped order sheet. "Print" uses the browser's
 // print-to-PDF; "Download CSV" writes a grouped spreadsheet.
-export default function OrderSheet({ job, takeoff }) {
-  const { totals, geometry } = takeoff
+export default function OrderSheet({ job, takeoff, showSource }) {
+  const { totals, components } = takeoff
 
   return (
     <div>
@@ -31,13 +30,12 @@ export default function OrderSheet({ job, takeoff }) {
             <Brand />
             <p className="mt-2 text-xs uppercase tracking-[0.2em] text-slate-400">Materials Order Sheet</p>
           </div>
-          <div className="text-right text-sm">
+          <div className="max-w-[50%] text-right text-sm">
             <div className="text-lg font-bold text-wf-navy">{job.name || 'Untitled job'}</div>
             <div className="text-slate-600">{job.customer || '—'}</div>
             <div className="text-slate-500">{job.date}</div>
             <div className="mt-1 text-xs text-slate-400">
-              {num(job.inputs.lengthFt)}′ × {num(job.inputs.depthFt)}′ · {geometry.areaSqFt} sq ft ·{' '}
-              {MATERIAL_LABELS[job.inputs.material]}
+              {components.map((c) => c.comp.label).join(' · ')}
             </div>
           </div>
         </header>
@@ -59,9 +57,10 @@ export default function OrderSheet({ job, takeoff }) {
               </thead>
               <tbody>
                 {cat.items.map((it) => (
-                  <tr key={it.id} className="border-b border-wf-line/50">
+                  <tr key={it.key} className="border-b border-wf-line/50">
                     <td className="py-1.5 pr-2">
                       <span className="font-medium text-wf-navy">{it.name}</span>
+                      {showSource && <span className="ml-1 text-[10px] text-slate-400">· {it.sourceLabel}</span>}
                       {it.overridden && <span className="ml-1 text-[10px] text-amber-600">(edited)</span>}
                     </td>
                     <td className="py-1.5 px-2 text-right tabular-nums text-slate-600">{qty(it.qtyNeeded)} {it.unit}</td>
@@ -92,7 +91,7 @@ export default function OrderSheet({ job, takeoff }) {
 
         <p className="mt-4 text-[10px] text-slate-400">
           Estimate only. Quantities use seeded defaults until confirmed with the supplier's real
-          numbers. Waterfront Solutions · West Michigan deck & stair builders.
+          numbers. Waterfront Solutions · West Michigan deck &amp; stair builders.
         </p>
       </div>
     </div>
@@ -102,19 +101,19 @@ export default function OrderSheet({ job, takeoff }) {
 // ---- CSV export ----------------------------------------------------------
 function downloadCSV(job, takeoff) {
   const rows = [
-    ['Category', 'Item', 'Qty Needed', 'Unit', 'Purchase Unit', 'Qty to Order', 'Unit Price', 'Line Cost', 'Est. Leftover', 'Leftover $'],
+    ['Category', 'Item', 'Component', 'Qty Needed', 'Unit', 'Purchase Unit', 'Qty to Order', 'Unit Price', 'Line Cost', 'Est. Leftover', 'Leftover $'],
   ]
   for (const cat of takeoff.categories) {
     for (const it of cat.items) {
       rows.push([
-        cat.name, it.name, qty(it.qtyNeeded), it.unit, it.purchaseUnit,
+        cat.name, it.name, it.sourceLabel, qty(it.qtyNeeded), it.unit, it.purchaseUnit,
         it.qtyToOrder, it.unitPrice, it.lineCost, qty(it.expectedLeftover), it.leftoverValue,
       ])
     }
   }
   rows.push([])
-  rows.push(['', '', '', '', '', '', '', 'Material total', '', takeoff.totals.materialCost])
-  rows.push(['', '', '', '', '', '', '', 'Leftover total', '', takeoff.totals.leftoverValue])
+  rows.push(['', '', '', '', '', '', '', '', 'Material total', '', takeoff.totals.materialCost])
+  rows.push(['', '', '', '', '', '', '', '', 'Leftover total', '', takeoff.totals.leftoverValue])
 
   const csv = rows.map((r) => r.map(csvCell).join(',')).join('\n')
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
@@ -129,9 +128,4 @@ function downloadCSV(job, takeoff) {
 function csvCell(v) {
   const s = String(v ?? '')
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
-}
-
-function num(v) {
-  const n = parseFloat(v)
-  return Number.isFinite(n) ? n : 0
 }

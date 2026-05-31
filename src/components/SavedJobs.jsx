@@ -1,4 +1,4 @@
-import { computeTakeoff, MATERIAL_LABELS } from '../materialRules.js'
+import { computeJob } from '../materialRules.js'
 import { money } from '../format.js'
 
 // List of saved jobs from localStorage. Reopen, duplicate, or delete.
@@ -17,14 +17,14 @@ export default function SavedJobs({ jobs, config, onOpen, onDuplicate, onDelete,
   return (
     <div className="space-y-3">
       {jobs.map((job) => {
-        const t = computeTakeoff(job, config)
+        const t = computeJob(job, config)
+        const parts = (job.components || []).map((c) => c.label).join(' · ') || 'No components'
         return (
           <div key={job.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-wf-line bg-white p-4 shadow-sm">
             <button onClick={() => onOpen(job.id)} className="min-w-0 flex-1 text-left">
               <div className="truncate font-semibold text-wf-navy">{job.name || 'Untitled job'}</div>
               <div className="truncate text-sm text-slate-500">
-                {job.customer || '—'} · {job.date} · {num(job.inputs.lengthFt)}′×{num(job.inputs.depthFt)}′ ·{' '}
-                {MATERIAL_LABELS[job.inputs.material]}
+                {job.customer || '—'} · {job.date} · {parts}
               </div>
             </button>
             <div className="flex items-center gap-4">
@@ -44,9 +44,4 @@ export default function SavedJobs({ jobs, config, onOpen, onDuplicate, onDelete,
       })}
     </div>
   )
-}
-
-function num(v) {
-  const n = parseFloat(v)
-  return Number.isFinite(n) ? n : 0
 }

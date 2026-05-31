@@ -21,10 +21,27 @@ export function saveConfig(cfg) {
 
 export function loadJobs() {
   try {
-    return JSON.parse(localStorage.getItem(JOBS_KEY)) || []
+    const jobs = JSON.parse(localStorage.getItem(JOBS_KEY)) || []
+    return jobs.map(normalizeJob)
   } catch {
     return []
   }
+}
+
+// Migrate older single-deck jobs ({inputs, overrides}) to the component model
+// ({components: [...]}) so nothing saved before the refactor breaks.
+function normalizeJob(job) {
+  if (job.components) return job
+  const { inputs, overrides, ...rest } = job
+  if (inputs) {
+    return {
+      ...rest,
+      components: [
+        { id: 'legacy_deck', type: 'deck', label: 'Deck section', inputs, overrides: overrides || {} },
+      ],
+    }
+  }
+  return { ...rest, components: [] }
 }
 
 export function saveJobs(jobs) {

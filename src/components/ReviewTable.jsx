@@ -1,17 +1,18 @@
 import { money, qty } from '../format.js'
 
-// Editable parts list. The user can override any "Qty to Order" and it persists
-// on the job; everything (leftover, line cost, totals) recomputes live.
-export default function ReviewTable({ takeoff, onOverride, onResetAll, hasOverrides }) {
+// Editable, combined parts list. Items from every component merge into shared
+// material categories (all the decking lands together). The user can override
+// any "Qty to Order"; it persists on that component and recomputes live.
+export default function ReviewTable({ takeoff, onOverride, onResetAll, hasOverrides, showSource }) {
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-slate-600">
           Tap any <span className="font-semibold text-wf-navy">Qty to Order</span> to override the
           calculated number. Overrides are saved with this job.
         </p>
         {hasOverrides && (
-          <button onClick={onResetAll} className="text-sm font-medium text-wf-blue hover:underline">
+          <button onClick={onResetAll} className="shrink-0 text-sm font-medium text-wf-blue hover:underline">
             Reset all to calculated
           </button>
         )}
@@ -36,9 +37,16 @@ export default function ReviewTable({ takeoff, onOverride, onResetAll, hasOverri
               </thead>
               <tbody>
                 {cat.items.map((it) => (
-                  <tr key={it.id} className="border-b border-wf-line/60 last:border-0 align-top">
+                  <tr key={it.key} className="border-b border-wf-line/60 last:border-0 align-top">
                     <td className="px-4 py-2.5">
-                      <div className="font-medium text-wf-navy">{it.name}</div>
+                      <div className="font-medium text-wf-navy">
+                        {it.name}
+                        {showSource && (
+                          <span className="ml-2 rounded bg-wf-pale px-1.5 py-0.5 text-[10px] font-normal text-wf-blue">
+                            {it.sourceLabel}
+                          </span>
+                        )}
+                      </div>
                       {it.note && <div className="text-xs text-slate-400">{it.note}</div>}
                     </td>
                     <td className="px-3 py-2.5 text-right tabular-nums text-slate-600">
@@ -50,28 +58,20 @@ export default function ReviewTable({ takeoff, onOverride, onResetAll, hasOverri
                         type="number"
                         min="0"
                         value={it.qtyToOrder}
-                        onChange={(e) => onOverride(it.id, e.target.value)}
+                        onChange={(e) => onOverride(it.componentId, it.id, e.target.value)}
                         className={`w-20 rounded-lg border px-2 py-1 text-center tabular-nums outline-none focus:ring-2 focus:ring-wf-sky/40 ${
-                          it.overridden
-                            ? 'border-amber-400 bg-amber-50 font-semibold'
-                            : 'border-wf-line bg-white'
+                          it.overridden ? 'border-amber-400 bg-amber-50 font-semibold' : 'border-wf-line bg-white'
                         }`}
                       />
-                      {it.overridden && (
-                        <div className="mt-0.5 text-[10px] text-amber-600">calc {it.baseOrder}</div>
-                      )}
+                      {it.overridden && <div className="mt-0.5 text-[10px] text-amber-600">calc {it.baseOrder}</div>}
                     </td>
                     <td className="px-3 py-2.5 text-right tabular-nums">
                       <span className={it.expectedLeftover > 0 ? 'text-slate-600' : 'text-slate-300'}>
                         {qty(it.expectedLeftover)} {it.expectedLeftover > 0 ? it.unit : ''}
                       </span>
-                      {it.leftoverValue > 0 && (
-                        <div className="text-[10px] text-amber-600">{money(it.leftoverValue)}</div>
-                      )}
+                      {it.leftoverValue > 0 && <div className="text-[10px] text-amber-600">{money(it.leftoverValue)}</div>}
                     </td>
-                    <td className="px-4 py-2.5 text-right font-medium tabular-nums text-wf-navy">
-                      {money(it.lineCost)}
-                    </td>
+                    <td className="px-4 py-2.5 text-right font-medium tabular-nums text-wf-navy">{money(it.lineCost)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -80,28 +80,20 @@ export default function ReviewTable({ takeoff, onOverride, onResetAll, hasOverri
         </div>
       ))}
 
-      <TotalsBar takeoff={takeoff} />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <Stat label="Items on list" value={takeoff.totals.itemCount} />
+        <Stat label="Estimated material cost" value={money(takeoff.totals.materialCost)} />
+        <Stat label="Estimated leftover value" value={money(takeoff.totals.leftoverValue)} amber />
+      </div>
     </div>
   )
 }
 
-function TotalsBar({ takeoff }) {
-  return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-      <Stat label="Items on list" value={takeoff.totals.itemCount} />
-      <Stat label="Estimated material cost" value={money(takeoff.totals.materialCost)} strong />
-      <Stat label="Estimated leftover value" value={money(takeoff.totals.leftoverValue)} amber />
-    </div>
-  )
-}
-
-function Stat({ label, value, strong, amber }) {
+function Stat({ label, value, amber }) {
   return (
     <div className={`rounded-xl border p-4 shadow-sm ${amber ? 'border-amber-200 bg-amber-50' : 'border-wf-line bg-white'}`}>
       <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
-      <div className={`mt-1 text-2xl font-bold tabular-nums ${amber ? 'text-amber-700' : 'text-wf-navy'} ${strong ? '' : ''}`}>
-        {value}
-      </div>
+      <div className={`mt-1 text-2xl font-bold tabular-nums ${amber ? 'text-amber-700' : 'text-wf-navy'}`}>{value}</div>
     </div>
   )
 }
