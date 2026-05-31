@@ -1,14 +1,16 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Brand from './components/Brand.jsx'
 import ComponentList from './components/ComponentList.jsx'
 import ReviewTable from './components/ReviewTable.jsx'
 import OrderSheet from './components/OrderSheet.jsx'
+import QuoteBuilder from './components/QuoteBuilder.jsx'
 import SettingsPanel from './components/SettingsPanel.jsx'
 import SavedJobs from './components/SavedJobs.jsx'
 import { inputCls, Field, Grid } from './components/ui.jsx'
 import { computeJob, DEFAULT_CONFIG, newJobComponents } from './materialRules.js'
-import { loadConfig, saveConfig, loadJobs, saveJobs, newId } from './storage.js'
-import { todayISO } from './format.js'
+import { defaultQuote } from './quote.js'
+import { loadConfig, saveConfig, loadJobs, saveJobs, newId, nextJobNumber } from './storage.js'
+import { todayISO, nowISO, jobNoLabel } from './format.js'
 
 // Single-page app. View is driven by local state; everything persists to
 // localStorage so the foreman can close the tab and come back to saved jobs.
@@ -16,15 +18,21 @@ const STEPS = [
   { id: 'job', label: '1 · Build job' },
   { id: 'review', label: '2 · Review parts' },
   { id: 'order', label: '3 · Order sheet' },
+  { id: 'quote', label: '4 · Customer quote' },
 ]
 
 function blankJob() {
   return {
     id: newId(),
+    jobNumber: nextJobNumber(),
+    version: 1,
     name: '',
     customer: '',
     date: todayISO(),
+    createdAt: nowISO(),
+    updatedAt: nowISO(),
     components: newJobComponents(),
+    quote: defaultQuote(),
   }
 }
 
@@ -42,30 +50,55 @@ export default function App() {
   const takeoff = useMemo(() => (current ? computeJob(current, config) : null), [current, config])
   const showSource = (current?.components?.length || 0) > 1
 
+  // Tracks the open editing session so the job version bumps ONCE per session
+  // (open a saved job, edit it -> v2; reopen, edit -> v3) instead of per keystroke.
+  const openSession = useRef({ id: null, counted: false })
+
   // ---- job actions ----
   function startNewJob() {
     const job = blankJob()
+    openSession.current = { id: job.id, counted: true } // building v1 — don't bump
     setJobs((js) => [job, ...js])
     setCurrentId(job.id)
     setStep('job')
     setView('editor')
   }
   function openJob(id) {
+    openSession.current = { id, counted: false } // first edit this session -> new revision
     setCurrentId(id)
     setStep('job')
     setView('editor')
   }
   function updateJob(updated) {
-    setJobs((js) => js.map((j) => (j.id === updated.id ? updated : j)))
+    const s = openSession.current
+    let next = { ...updated, updatedAt: nowISO() }
+    if (s.id === updated.id && !s.counted) {
+      next = { ...next, version: (updated.version || 1) + 1 }
+      s.counted = true
+    }
+    setJobs((js) => js.map((j) => (j.id === next.id ? next : j)))
   }
   function setComponents(components) {
     if (!current) return
     updateJob({ ...current, components })
   }
+  function setQuote(quote) {
+    if (!current) return
+    updateJob({ ...current, quote })
+  }
   function duplicateJob(id) {
     const src = jobs.find((j) => j.id === id)
     if (!src) return
-    const copy = { ...structuredClone(src), id: newId(), name: `${src.name || 'Job'} (copy)`, date: todayISO() }
+    const copy = {
+      ...structuredClone(src),
+      id: newId(),
+      jobNumber: nextJobNumber(),
+      version: 1,
+      name: `${src.name || 'Job'} (copy)`,
+      date: todayISO(),
+      createdAt: nowISO(),
+      updatedAt: nowISO(),
+    }
     setJobs((js) => [copy, ...js])
   }
   function deleteJob(id) {
@@ -124,6 +157,11 @@ export default function App() {
 
         {view === 'editor' && current && (
           <div>
+            <div className="no-print mb-3 flex items-center gap-2 text-sm">
+              <span className="rounded-md bg-wf-navy px-2 py-0.5 font-bold text-white">{jobNoLabel(current.jobNumber)}</span>
+              <span className="rounded-md border border-wf-line bg-white px-2 py-0.5 font-medium text-wf-navy">Rev {current.version}</span>
+              <span className="text-slate-400">updated {(current.updatedAt || '').slice(0, 10)}</span>
+            </div>
             <div className="no-print mb-5 flex flex-wrap gap-2">
               {STEPS.map((s) => (
                 <button key={s.id} onClick={() => setStep(s.id)}
@@ -180,6 +218,8 @@ export default function App() {
             )}
 
             {step === 'order' && takeoff && <OrderSheet job={current} takeoff={takeoff} showSource={showSource} />}
+
+            {step === 'quote' && takeoff && <QuoteBuilder job={current} takeoff={takeoff} onChange={setQuote} />}
           </div>
         )}
       </main>

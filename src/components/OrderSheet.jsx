@@ -1,5 +1,5 @@
 import Brand from './Brand.jsx'
-import { money, qty } from '../format.js'
+import { money, qty, jobNoLabel } from '../format.js'
 
 // The deliverable: a clean, grouped order sheet. "Print" uses the browser's
 // print-to-PDF; "Download CSV" writes a grouped spreadsheet.
@@ -33,7 +33,7 @@ export default function OrderSheet({ job, takeoff, showSource }) {
           <div className="max-w-[50%] text-right text-sm">
             <div className="text-lg font-bold text-wf-navy">{job.name || 'Untitled job'}</div>
             <div className="text-slate-600">{job.customer || '—'}</div>
-            <div className="text-slate-500">{job.date}</div>
+            <div className="text-xs text-slate-500">{jobNoLabel(job.jobNumber)} · Rev {job.version} · {job.date}</div>
             <div className="mt-1 text-xs text-slate-400">
               {components.map((c) => c.comp.label).join(' · ')}
             </div>

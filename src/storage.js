@@ -1,9 +1,22 @@
 // Local-first persistence. Everything lives in localStorage — no backend, no
 // auth, no database. Two keys: the editable config, and the list of saved jobs.
 import { DEFAULT_CONFIG } from './materialRules.js'
+import { defaultQuote } from './quote.js'
+import { nowISO } from './format.js'
 
 const CONFIG_KEY = 'wf_config_v1'
 const JOBS_KEY = 'wf_jobs_v1'
+const COUNTER_KEY = 'wf_jobno_v1'
+
+// Sequential, human-friendly job numbers (WF-1001, WF-1002, …). The counter
+// persists in localStorage and only ever moves forward.
+export function nextJobNumber() {
+  let n = parseInt(localStorage.getItem(COUNTER_KEY) || '1000', 10)
+  if (!Number.isFinite(n)) n = 1000
+  n += 1
+  localStorage.setItem(COUNTER_KEY, String(n))
+  return n
+}
 
 export function loadConfig() {
   try {
@@ -28,20 +41,23 @@ export function loadJobs() {
   }
 }
 
-// Migrate older single-deck jobs ({inputs, overrides}) to the component model
-// ({components: [...]}) so nothing saved before the refactor breaks.
+// Migrate older saved jobs forward so nothing breaks across feature additions:
+// - single-deck ({inputs}) -> component model ({components})
+// - backfill jobNumber / version / timestamps / quote
 function normalizeJob(job) {
-  if (job.components) return job
-  const { inputs, overrides, ...rest } = job
-  if (inputs) {
-    return {
-      ...rest,
-      components: [
-        { id: 'legacy_deck', type: 'deck', label: 'Deck section', inputs, overrides: overrides || {} },
-      ],
-    }
+  let j = job
+  if (!j.components) {
+    const { inputs, overrides, ...rest } = j
+    j = inputs
+      ? { ...rest, components: [{ id: 'legacy_deck', type: 'deck', label: 'Deck section', inputs, overrides: overrides || {} }] }
+      : { ...rest, components: [] }
   }
-  return { ...rest, components: [] }
+  if (!j.jobNumber) j = { ...j, jobNumber: nextJobNumber() }
+  if (!j.version) j = { ...j, version: 1 }
+  if (!j.createdAt) j = { ...j, createdAt: j.date ? `${j.date}T00:00:00.000Z` : nowISO() }
+  if (!j.updatedAt) j = { ...j, updatedAt: j.createdAt }
+  if (!j.quote) j = { ...j, quote: defaultQuote() }
+  return j
 }
 
 export function saveJobs(jobs) {
