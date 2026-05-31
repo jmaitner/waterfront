@@ -66,6 +66,9 @@ export const DEFAULT_CONFIG = {
   concreteBagsPerFooting: 3, // PLACEHOLDER — bags of concrete per footing
   concreteBagPrice: 6.5, // PLACEHOLDER — $ per bag of concrete
 
+  // ---- LABOR --------------------------------------------------------------
+  laborRatePerHr: 65, // PLACEHOLDER — default crew labor rate, $ / hour
+
   // ---- STAIRS -------------------------------------------------------------
   stairTargetRiserIn: 7.5, // PLACEHOLDER — target step rise, inches (code ~7.75 max)
   stairTreadRunIn: 11, // PLACEHOLDER — tread run (depth) per step, inches
@@ -155,6 +158,10 @@ export const SETTINGS_SCHEMA = [
       { key: 'concreteBagsPerFooting', label: 'Concrete bags / footing' },
       { key: 'concreteBagPrice', label: 'Concrete bag price', type: 'money', unit: 'ea' },
     ],
+  },
+  {
+    group: 'Labor',
+    fields: [{ key: 'laborRatePerHr', label: 'Crew labor rate', type: 'money', unit: '/hr' }],
   },
   {
     group: 'Stairs',
@@ -323,10 +330,13 @@ export function computeComponent(comp, cfg) {
   else if (comp.type === 'custom') ({ raw, summary } = computeCustom(comp.items || [], cfg))
 
   const ov = comp.overrides || {}
-  const items = raw.map((it) => {
-    const f = finalize(it, ov[it.id])
-    return { ...f, componentId: comp.id, sourceLabel: comp.label, key: `${comp.id}::${it.id}` }
-  })
+  const items = raw
+    .map((it) => {
+      const f = finalize(it, ov[it.id])
+      if (!f) return null // removed by the user on the review step
+      return { ...f, componentId: comp.id, sourceLabel: comp.label, key: `${comp.id}::${it.id}` }
+    })
+    .filter(Boolean)
   return { items, summary }
 }
 
@@ -640,20 +650,55 @@ function li(id, category, name, opts) {
   }
 }
 
-// Apply waste + round UP to whole purchase units, honoring a user override, then
-// compute leftover and dollars.
+// Apply user overrides (qty, unit price, removal) + waste, round UP to whole
+// purchase units, then compute leftover and dollars.
+//
+// `override` may be:
+//   - undefined / null / ''  -> no override
+//   - a number               -> legacy qtyToOrder override
+//   - an object              -> { qtyToOrder?, unitPrice?, qtyNeeded?, removed? }
+// Returns null when the user removed the item on the review step.
 function finalize(it, override) {
+  const o = normalizeOverride(override)
+  if (o.removed) return null
+
+  const priceOverridden = has(o.unitPrice)
+  const unitPrice = priceOverridden ? round2(num(o.unitPrice)) : it.unitPrice
+  const qtyNeeded = has(o.qtyNeeded) ? num(o.qtyNeeded) : it.qtyNeeded
+
   const wasteMult = 1 + num(it.wastePct) / 100
-  const baseOrder = Math.max(0, Math.ceil((it.qtyNeeded * wasteMult) / it.unitCoverage))
-  const overridden = override !== undefined && override !== null && override !== ''
-  const qtyToOrder = overridden ? Math.max(0, Math.round(num(override))) : baseOrder
+  const baseOrder = Math.max(0, Math.ceil((qtyNeeded * wasteMult) / it.unitCoverage))
+  const qtyOverridden = has(o.qtyToOrder)
+  const qtyToOrder = qtyOverridden ? Math.max(0, Math.round(num(o.qtyToOrder))) : baseOrder
 
   const provided = qtyToOrder * it.unitCoverage
-  const expectedLeftover = Math.max(0, round2(provided - it.qtyNeeded))
-  const lineCost = round2(qtyToOrder * it.unitPrice)
-  const leftoverValue = round2((expectedLeftover / it.unitCoverage) * it.unitPrice)
+  const expectedLeftover = Math.max(0, round2(provided - qtyNeeded))
+  const lineCost = round2(qtyToOrder * unitPrice)
+  const leftoverValue = round2((expectedLeftover / it.unitCoverage) * unitPrice)
 
-  return { ...it, baseOrder, qtyToOrder, overridden, expectedLeftover, lineCost, leftoverValue }
+  return {
+    ...it,
+    unitPrice,
+    qtyNeeded,
+    baseOrder,
+    qtyToOrder,
+    qtyOverridden,
+    priceOverridden,
+    overridden: qtyOverridden || priceOverridden,
+    expectedLeftover,
+    lineCost,
+    leftoverValue,
+  }
+}
+
+function normalizeOverride(o) {
+  if (o == null || o === '') return {}
+  if (typeof o === 'object') return o
+  return { qtyToOrder: o } // legacy: a bare number meant qtyToOrder
+}
+
+function has(v) {
+  return v !== undefined && v !== null && v !== ''
 }
 
 function num(v) {

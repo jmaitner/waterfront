@@ -2,6 +2,7 @@
 // auth, no database. Two keys: the editable config, and the list of saved jobs.
 import { DEFAULT_CONFIG } from './materialRules.js'
 import { defaultQuote } from './quote.js'
+import { defaultLabor } from './labor.js'
 import { nowISO } from './format.js'
 
 const CONFIG_KEY = 'wf_config_v1'
@@ -57,6 +58,8 @@ function normalizeJob(job) {
   if (!j.createdAt) j = { ...j, createdAt: j.date ? `${j.date}T00:00:00.000Z` : nowISO() }
   if (!j.updatedAt) j = { ...j, updatedAt: j.createdAt }
   if (!j.quote) j = { ...j, quote: defaultQuote() }
+  if (!j.labor) j = { ...j, labor: defaultLabor() }
+  if (!j.revisions) j = { ...j, revisions: [] }
   return j
 }
 

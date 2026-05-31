@@ -21,9 +21,10 @@ export function defaultQuote() {
   }
 }
 
-// Seed one quote line per component (its material subtotal) + a labor line to
-// fill in. Lines tied to a component carry componentId so we can re-sync costs.
-export function seedQuoteLines(takeoff) {
+// Seed one quote line per component (its material subtotal) + a labor line
+// pulled from the Labor step. Lines tied to a component carry componentId, and
+// the labor line is flagged fromLabor, so both re-sync from the live job.
+export function seedQuoteLines(takeoff, laborTotal = 0) {
   const lines = takeoff.components
     .filter((c) => c.items.length > 0)
     .map((c) => ({
@@ -33,20 +34,22 @@ export function seedQuoteLines(takeoff) {
       componentId: c.comp.id,
       priceOverride: null,
     }))
-  lines.push({ id: 'ql_labor', label: 'Labor & installation', cost: 0, componentId: null, priceOverride: null })
+  lines.push({ id: 'ql_labor', label: 'Labor & installation', cost: round2(laborTotal), componentId: null, fromLabor: true, priceOverride: null })
   return lines
 }
 
-// Refresh material-derived line costs from the current takeoff (after the job
-// was edited), leaving hand-added lines and price overrides untouched.
-export function resyncCosts(quote, takeoff) {
+// Refresh material-derived line costs from the current takeoff and the labor
+// line from the Labor step, leaving hand-added lines and price overrides alone.
+export function resyncCosts(quote, takeoff, laborTotal = 0) {
   const byComp = {}
   for (const c of takeoff.components) byComp[c.comp.id] = round2(sum(c.items.map((i) => i.lineCost)))
   return {
     ...quote,
-    lines: quote.lines.map((l) =>
-      l.componentId && byComp[l.componentId] != null ? { ...l, cost: byComp[l.componentId] } : l,
-    ),
+    lines: quote.lines.map((l) => {
+      if (l.fromLabor) return { ...l, cost: round2(laborTotal) }
+      if (l.componentId && byComp[l.componentId] != null) return { ...l, cost: byComp[l.componentId] }
+      return l
+    }),
   }
 }
 

@@ -1,4 +1,5 @@
 import { computeQuote, seedQuoteLines, resyncCosts, defaultQuote } from '../quote.js'
+import { computeLabor } from '../labor.js'
 import { inputCls } from './ui.jsx'
 import { money } from '../format.js'
 import CustomerQuote from './CustomerQuote.jsx'
@@ -6,8 +7,9 @@ import CustomerQuote from './CustomerQuote.jsx'
 // Step 4. Asks whether to build a customer-facing quote; if yes, turns material
 // COST into customer PRICE via markup/margin, with editable lines, and shows a
 // live preview of exactly what the customer will see.
-export default function QuoteBuilder({ job, takeoff, onChange }) {
+export default function QuoteBuilder({ job, takeoff, config, onChange }) {
   const quote = job.quote || defaultQuote()
+  const laborTotal = computeLabor(job.labor, config).total
 
   // ---- the yes / no gate ----
   if (!quote.enabled) {
@@ -21,7 +23,7 @@ export default function QuoteBuilder({ job, takeoff, onChange }) {
         </p>
         <div className="mt-5 flex justify-center gap-3">
           <button
-            onClick={() => onChange({ ...defaultQuote(), enabled: true, seeded: true, lines: seedQuoteLines(takeoff) })}
+            onClick={() => onChange({ ...defaultQuote(), enabled: true, seeded: true, lines: seedQuoteLines(takeoff, laborTotal) })}
             className="rounded-lg bg-wf-blue px-6 py-2.5 font-semibold text-white hover:bg-wf-navy"
           >
             Yes, build a quote
@@ -48,8 +50,8 @@ export default function QuoteBuilder({ job, takeoff, onChange }) {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h3 className="text-sm font-bold uppercase tracking-wide text-wf-blue">Pricing</h3>
           <div className="flex items-center gap-2">
-            <button onClick={() => set(resyncCosts(quote, takeoff))} className="rounded-lg border border-wf-line px-3 py-1.5 text-xs font-medium text-wf-navy hover:bg-wf-pale">
-              Re-sync material costs
+            <button onClick={() => set(resyncCosts(quote, takeoff, laborTotal))} className="rounded-lg border border-wf-line px-3 py-1.5 text-xs font-medium text-wf-navy hover:bg-wf-pale">
+              Re-sync material + labor
             </button>
             <button onClick={() => set({ enabled: false })} className="rounded-lg border border-wf-line px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-wf-pale">
               Disable quote

@@ -28,21 +28,34 @@ input[type="number"]::-webkit-inner-spin-button {
   margin: 0;
 }
 
-/* ---------------- Print: only the order sheet should print ---------------- */
+/* ---------------- Print: only the order sheet / quote should print -------- */
 @media print {
+  /* margin:0 removes the browser's auto header/footer (URL, date, page title).
+     We add our own padding back on the document below. */
+  @page {
+    margin: 0;
+  }
+  html,
   body {
-    background: #fff;
+    background: #fff !important;
   }
   .no-print {
     display: none !important;
   }
-  .print-area {
-    position: absolute;
-    inset: 0;
-    margin: 0;
-    padding: 0;
+  /* Let the document use the full page width (drop the app's centered column). */
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
-  @page {
-    margin: 0.5in;
+  /* The on-screen card chrome (border, rounded corners, shadow) should not
+     print — just the clean document with comfortable inner margins. */
+  .print-area {
+    position: static !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 0.5in !important;
   }
 }

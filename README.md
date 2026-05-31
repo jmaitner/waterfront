@@ -28,24 +28,32 @@ That's the whole setup. Jobs and pricing persist to your browser's
 1. **+ New job** → starts with a `12 × 16` TimberTech deck component already
    filled in. Optionally **+ Add component** → a bluff staircase (e.g. 18 ft
    rise, 2 landings), a railing run, a seawall, or a custom kayak-ramp line.
-2. **Review parts list** → every component's items merge into shared categories
-   (Framing / Decking / Fasteners / Railing / Trim / Posts / Custom), each
-   tagged with its source. Override any "Qty to Order" inline; it saves on the
-   job.
-3. **Build order sheet** → grouped, rounded to purchase units, with expected
-   leftover and an estimated material-cost total. **Print / Save PDF** or
-   **Download CSV**.
-4. **Customer quote** → answer "Create a customer-facing quote?" Yes. It seeds a
-   priced line per component from material cost; set **markup or margin %**, add
-   labor / permits / demo lines, and a clean branded **customer quote** (prices
-   only — no cost or margin) previews live. Print or CSV it.
-5. **Materials & Pricing** (top nav) → type in real TimberTech / Westbury prices
-   and watch every total update live. **Reset to defaults** restores the seeds.
+2. **Review parts list** → every component's items merge into shared categories,
+   each tagged with its source. Edit any **Qty to Order** or **Unit $**, remove
+   a line, or add your own items at the bottom — all saved on the job.
+3. **Order sheet** → grouped, rounded to purchase units, with expected leftover
+   and a material-cost total. **Print / Save PDF** or **Download CSV**.
+4. **Labor** → estimate tasks × hours × rate (default rate set in Materials &
+   Pricing, overridable per line). The total feeds the customer quote.
+5. **Customer quote** → answer "Create a customer-facing quote?" Yes. It seeds a
+   priced line per component from material cost plus the labor total; set
+   **markup or margin %**, add lines, and a clean branded **customer quote**
+   (prices only — no cost or margin) previews live. Print or CSV it.
 
-Every job gets a number (**WF-1001**) and a **revision** that bumps once per
-editing session — open a saved job, change it, it becomes Rev 2. The materials
-order sheet (internal: costs + leftover) and the customer quote (external:
-prices) are two separate documents off the same job.
+**Materials & Pricing** (top nav) → type in real TimberTech / Westbury / labor
+numbers and watch every total update live. **Reset to defaults** restores seeds.
+
+Every job has a number (**WF-1001**) and a **revision** that bumps once per
+editing session. Use **Save & exit** to return to the list, **Publish** to
+snapshot the current revision, and the **Revisions ▾** dropdown to restore a
+published version. The materials order sheet (internal: costs + leftover) and
+the customer quote (external: prices) are two separate documents off one job.
+
+### Printing
+Print uses `@page { margin: 0 }` so the browser's own header/footer (URL,
+timestamp) doesn't appear, and the on-screen card border/shadow is stripped in
+print — you get just the clean document. (If your browser still shows a URL/date,
+untick "Headers and footers" in its print dialog.)
 
 ## Where the numbers live
 
