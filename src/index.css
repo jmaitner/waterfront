@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+/* ---- Waterfront Solutions brand palette (Lake-Michigan navy/blue) ---- */
+@theme {
+  --color-wf-navy: #0b2545;
+  --color-wf-blue: #13578c;
+  --color-wf-sky: #5a8fc0;
+  --color-wf-pale: #eef4f9;
+  --color-wf-line: #d6e1ec;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--color-wf-pale);
+  color: var(--color-wf-navy);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Numeric inputs: tidy, no spinners stealing space on the order sheet */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* ---------------- Print: only the order sheet should print ---------------- */
+@media print {
+  body {
+    background: #fff;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-area {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 0;
+  }
+  @page {
+    margin: 0.5in;
+  }
+}
