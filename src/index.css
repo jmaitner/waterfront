@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* ---- Waterfront Solutions brand palette (Lake-Michigan navy/blue) ---- */
+/* ---- App palette (navy / blue) ---- */
 @theme {
   --color-wf-navy: #0b2545;
   --color-wf-blue: #13578c;

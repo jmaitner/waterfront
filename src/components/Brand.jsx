@@ -1,27 +1,6 @@
-import { useState } from 'react'
-
-// Waterfront Solutions mark. Drops in /logo.png if present (the real asset),
-// otherwise falls back to a clean wave-mark wordmark so the demo never shows a
-// broken image.
+// Generic, white-label app mark — a neutral wave/deck icon + wordmark, no
+// client logo or company name. Swap in your own branding here if you want.
 export default function Brand({ compact = false }) {
-  const [imgOk, setImgOk] = useState(true)
-
-  if (imgOk) {
-    // The real Waterfront logo is white-on-transparent (made for dark
-    // backgrounds), so we sit it on a navy chip — works on the white app
-    // header and the white printed order sheet alike.
-    return (
-      <div className={`inline-flex items-center rounded-lg bg-wf-navy ${compact ? 'px-3 py-1.5' : 'px-4 py-2'}`}>
-        <img
-          src="/logo.png"
-          alt="Waterfront Solutions"
-          onError={() => setImgOk(false)}
-          className={compact ? 'h-8 w-auto' : 'h-12 w-auto'}
-        />
-      </div>
-    )
-  }
-
   return (
     <div className="flex items-center gap-3">
       <svg viewBox="0 0 40 40" className={compact ? 'h-9 w-9' : 'h-11 w-11'} aria-hidden="true">
@@ -34,10 +13,10 @@ export default function Brand({ compact = false }) {
       </svg>
       <div className="leading-tight">
         <div className={`font-extrabold tracking-tight text-wf-navy ${compact ? 'text-base' : 'text-xl'}`}>
-          WATERFRONT
+          Takeoff
         </div>
-        <div className={`font-semibold tracking-[0.2em] text-wf-blue ${compact ? 'text-[10px]' : 'text-xs'}`}>
-          SOLUTIONS
+        <div className={`font-semibold tracking-[0.18em] text-wf-blue ${compact ? 'text-[10px]' : 'text-xs'}`}>
+          DECK MATERIALS &amp; QUOTES
         </div>
       </div>
     </div>

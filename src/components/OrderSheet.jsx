@@ -91,7 +91,7 @@ export default function OrderSheet({ job, takeoff, showSource }) {
 
         <p className="mt-4 text-[10px] text-slate-400">
           Estimate only. Quantities use seeded defaults until confirmed with the supplier's real
-          numbers. Waterfront Solutions · West Michigan deck &amp; stair builders.
+          numbers.
         </p>
       </div>
     </div>

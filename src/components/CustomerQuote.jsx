@@ -68,10 +68,9 @@ export default function CustomerQuote({ job, quoted }) {
       )}
 
       <footer className="mt-6 border-t border-wf-line pt-4 text-[11px] leading-relaxed text-slate-400">
-        Thank you for considering Waterfront Solutions — West Michigan deck &amp; stair builders. This
-        quote is valid through {validUntil}. Pricing is an estimate based on the scope above; final
-        cost may change if the scope or site conditions change. A signed agreement and deposit are
-        required to schedule work.
+        Thank you for the opportunity to quote your project. This quote is valid through {validUntil}.
+        Pricing is an estimate based on the scope above; final cost may change if the scope or site
+        conditions change. A signed agreement and deposit are required to schedule work.
       </footer>
     </div>
   )

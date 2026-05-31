@@ -1,14 +1,14 @@
 // ============================================================================
-// Waterfront Solutions — Material Rules & Pricing Engine
+// Material Rules & Pricing Engine
 // ============================================================================
 // THIS FILE IS THE WHOLE BRAIN OF THE APP.
 //
 // A JOB is a list of COMPONENTS. Each component (a deck, a stair run, a railing
 // run, a retaining wall, or a bag of custom items) knows how to turn its own
 // inputs into line items. The app just adds every component's items into one
-// combined, grouped order sheet. So a real Waterfront job — "deck + bluff stair
-// with 3 landings + 200 ft of railing + a kayak ramp" — is just five components
-// on one job.
+// combined, grouped order sheet. So a real job — "deck + bluff stair with 3
+// landings + 200 ft of railing + a kayak ramp" — is just five components on one
+// job.
 //
 // Every number a non-coder might need to fix lives in DEFAULT_CONFIG below as a
 // named, commented value. Anything marked:
