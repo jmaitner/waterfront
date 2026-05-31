@@ -184,6 +184,11 @@ export default function App() {
 
   return (
     <div className="min-h-full">
+      {/* Demo disclaimer — hidden when printing order sheets / quotes. */}
+      <div className="no-print bg-amber-400 px-4 py-1.5 text-center text-xs font-semibold text-amber-950">
+        Demo build — for demonstration only. All prices and quantities are placeholder estimates, not a binding quote.
+      </div>
+
       <header className="no-print sticky top-0 z-10 border-b border-wf-line bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
           <button onClick={() => setView('jobs')} className="flex items-center">
